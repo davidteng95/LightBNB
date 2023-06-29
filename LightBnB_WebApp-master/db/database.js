@@ -37,7 +37,6 @@ const getUserWithEmail = (email) => {
   return pool
     .query(sqlQuery, values)
     .then((result) => {
-      console.log(result.rows);
       if (result.rows.length === 0) {
         return null;
       }
@@ -66,7 +65,6 @@ const getUserWithId = (id) => {
   return pool
     .query(sqlQuery, values)
     .then((result) => {
-      console.log(result.rows);
       if (result.rows.length === 0) {
         return null;
       }
@@ -97,14 +95,12 @@ const addUser = (user) => {
   return pool
     .query(sqlQuery, values)
     .then((result) => {
-      console.log(result.rows);
       return result.rows[0];
     })
     .catch((err) => {
       console.log(err.message);
     });
 };
-
 
 
 /// Reservations
@@ -114,9 +110,34 @@ const addUser = (user) => {
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function (guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+// const getAllReservations = function (guest_id, limit = 10) {
+//   return getAllProperties(null, 2);
+// };
+
+
+const getAllReservations = (guest_id, limit = 10) => {
+  const sqlQuery = `SELECT reservations.*, properties.*, reservations.*, avg(rating) as average_rating
+  FROM reservations
+  JOIN properties ON reservations.property_id = properties.id
+  JOIN property_reviews ON properties.id = property_reviews.property_id
+  WHERE reservations.guest_id = $1
+  GROUP BY properties.id, reservations.id
+  ORDER BY reservations.start_date
+  LIMIT $2;
+  `
+
+  const values = [guest_id, limit];
+
+  return pool
+    .query(sqlQuery, values)
+    .then((result) => {
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
+
 
 /// Properties
 
